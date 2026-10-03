@@ -1,0 +1,30 @@
+package com.piodev.database.dao
+
+import androidx.room.Dao
+import androidx.room.Query
+import com.piodev.database.entities.FeedEventEntity
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface FeedEventDao : BaseDao<FeedEventEntity> {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // LECTURA
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    @Query("SELECT * FROM FEED_EVENTS WHERE DELETED_AT IS NULL ORDER BY CREATED_AT DESC")
+    fun getAllFeedEvents(): Flow<List<FeedEventEntity>>
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // BORRADO
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    @Query("DELETE FROM FEED_EVENTS WHERE CREATED_AT < :threshold")
+    suspend fun deleteOlderThan(threshold: Long)
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // SINCRONIZACIÓN
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    @Query("SELECT * FROM FEED_EVENTS WHERE SYNC_STATUS = 'PENDING'")
+    suspend fun getPendingSync(): List<FeedEventEntity>
+
+    @Query("UPDATE FEED_EVENTS SET SYNC_STATUS = 'SYNCED' WHERE ID IN (:ids)")
+    suspend fun markAsSynced(ids: List<String>)
+}

@@ -24,3 +24,4 @@ local.properties
 /core/database/build
 /core/network/build
 /app/src/main/res
+/app/release
