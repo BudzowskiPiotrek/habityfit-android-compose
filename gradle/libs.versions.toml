@@ -21,6 +21,7 @@ moshi = "1.15.0"
 runtime = "1.10.6"
 lifecycleRuntimeCompose = "2.10.0"
 runtimeVersion = "1.11.2"
+securityCrypto = "1.1.0"
 
 
 
@@ -41,6 +42,7 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 # --- LIBRERÍAS DE HILT ---
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 # --- RED ---
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
