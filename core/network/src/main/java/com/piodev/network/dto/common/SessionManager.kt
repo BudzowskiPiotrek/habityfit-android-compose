@@ -1,7 +1,10 @@
 package com.piodev.network.dto.common
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Base64
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.json.JSONObject
 import javax.inject.Inject
@@ -11,12 +14,17 @@ import javax.inject.Singleton
 class SessionManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val prefs = context.getSharedPreferences("setpoint_auth_prefs", Context.MODE_PRIVATE)
-
+    private val prefs: SharedPreferences = createEncryptedPreferences(context)
 
     companion object {
+        private const val ENCRYPTED_PREFS_NAME = "setpoint_auth_prefs_encrypted"
+        private const val LEGACY_PREFS_NAME = "setpoint_auth_prefs"
         private const val KEY_JWT_TOKEN = "jwt_token"
         private const val KEY_USER_ID = "logged_user_id"
+    }
+
+    init {
+        migrateLegacySession()
     }
 
     fun saveSession(token: String, userId: String) {
@@ -56,7 +64,12 @@ class SessionManager @Inject constructor(
             if (parts.size < 2) return true
 
             // Decodificamos el Payload (segunda parte)
-            val payload = String(Base64.decode(parts[1], Base64.URL_SAFE))
+            val payload = String(
+                Base64.decode(
+                    parts[1],
+                    Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
+                )
+            )
             val json = JSONObject(payload)
 
             // El campo "exp" es obligatorio en un JWT estándar de servidor
@@ -67,5 +80,43 @@ class SessionManager @Inject constructor(
         } catch (e: Exception) {
             return true
         }
+    }
+
+    private fun migrateLegacySession() {
+        val legacy = context.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+        val legacyToken = legacy.getString(KEY_JWT_TOKEN, null)
+        val legacyUserId = legacy.getString(KEY_USER_ID, null)
+
+        if (legacyToken == null && legacyUserId == null) return
+
+        prefs.edit().apply {
+            legacyToken?.let { putString(KEY_JWT_TOKEN, it) }
+            legacyUserId?.let { putString(KEY_USER_ID, it) }
+        }.commit()
+
+        legacy.edit().clear().commit()
+    }
+
+    private fun createEncryptedPreferences(context: Context): SharedPreferences {
+        return try {
+            buildEncryptedPreferences(context)
+        } catch (e: Exception) {
+            context.deleteSharedPreferences(ENCRYPTED_PREFS_NAME)
+            buildEncryptedPreferences(context)
+        }
+    }
+
+    private fun buildEncryptedPreferences(context: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        return EncryptedSharedPreferences.create(
+            context,
+            ENCRYPTED_PREFS_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 }
