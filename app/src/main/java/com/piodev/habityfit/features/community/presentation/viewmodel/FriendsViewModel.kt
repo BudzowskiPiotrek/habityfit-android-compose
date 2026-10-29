@@ -129,7 +129,7 @@ class FriendsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             state = state.copy(isLoading = true)
-            repository.sendInvitation(email, userId)
+            repository.sendInvitation(email)
                 .onSuccess {
                     syncRepository.pushLocalChanges()
                     state = state.copy(

@@ -137,25 +137,22 @@ fun UserRelationDto.toEntity(): UserRelationEntity = UserRelationEntity(
 
 fun UserInvitationDto.toDomain() = UserInvitation(
     id = this.id.toString(),
-    email = this.email,
-    senderUserId = this.senderUserId.toString()
+    email = this.email
 )
 
 fun UserInvitationEntity.toDomain() = UserInvitation(
     id = this.ID,
     email = this.email,
-    senderUserId = this.senderUserId
 )
 
 fun UserInvitationEntity.toDto() = UserInvitationDto(
     id = this.ID,
     email = this.email,
-    senderUserId = this.senderUserId
 )
 
 fun UserInvitation.toEntity(): UserInvitationEntity = UserInvitationEntity(
     email = this.email,
-    senderUserId = this.senderUserId,
+    senderUserId =  UUID.randomUUID().toString() ,
     ID = this.id.ifBlank { UUID.randomUUID().toString() },
     CREATED_AT = System.currentTimeMillis(),
     UPDATED_AT = null,
@@ -169,7 +166,7 @@ fun UserInvitation.toEntity(): UserInvitationEntity = UserInvitationEntity(
 
 fun UserInvitationDto.toEntity(): UserInvitationEntity = UserInvitationEntity(
     email = this.email,
-    senderUserId = this.senderUserId,
+    senderUserId =  UUID.randomUUID().toString() ,
     ID = this.id,
     CREATED_AT = System.currentTimeMillis(),
     UPDATED_AT = null,

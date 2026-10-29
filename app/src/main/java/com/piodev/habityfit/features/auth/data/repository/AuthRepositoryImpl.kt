@@ -46,7 +46,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun register(email: String): Result<Unit> {
         return try {
             val response =
-                authApiService.register(EmailDto(token = LimitsConfig.TOKEN_APP, email = email))
+                authApiService.register(EmailDto(email = email))
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {

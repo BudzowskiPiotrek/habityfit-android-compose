@@ -22,5 +22,5 @@ interface FriendsRepository {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     suspend fun acceptFriendRequest(relationId: String): Result<Unit>
     suspend fun declineFriendRequest(relationId: String): Result<Unit>
-    suspend fun sendInvitation(email: String, senderId: String): Result<Unit>
+    suspend fun sendInvitation(email: String): Result<Unit>
 }

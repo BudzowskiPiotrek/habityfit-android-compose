@@ -5,7 +5,7 @@ import com.piodev.database.model.InvitationStatus
 import com.piodev.database.model.SyncStatus
 import java.util.UUID
 
-fun createInvitationEntity(email: String, senderId: String): UserInvitationEntity {
+fun createInvitationEntity(email: String): UserInvitationEntity {
     val now = System.currentTimeMillis()
     return UserInvitationEntity(
         ID = UUID.randomUUID().toString(),
@@ -15,7 +15,7 @@ fun createInvitationEntity(email: String, senderId: String): UserInvitationEntit
         SYNC_STATUS = SyncStatus.PENDING,
         email = email,
         token = null,
-        senderUserId = senderId,
+        senderUserId = "",
         expiresAt = null,
         status = InvitationStatus.PENDING,
         sended = false
