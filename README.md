@@ -1,23 +1,22 @@
 # HabityFit Android
 
-Native Android client for **HabityFit**, an offline-first strength training platform.
-Users log workouts without connectivity; changes are stored locally and synchronized later with the [HabityFit API](https://github.com/BudzowskiPiotrek/habityfit-api-dotnet).
-
-> Private repository. Backend is public, this client is kept private for commercial reasons.
+Native Android client for **HabityFit**, an offline-first strength training platform. Users log workouts without connectivity; changes are stored locally and synchronized later with the [HabityFit API](https://github.com/BudzowskiPiotrek/habityfit-api-dotnet).
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
 ![Room](https://img.shields.io/badge/Room-3DDC84?style=flat-square&logo=android&logoColor=white)
 ![Hilt](https://img.shields.io/badge/Hilt-DI-orange?style=flat-square)
 ![Retrofit](https://img.shields.io/badge/Retrofit-Moshi-green?style=flat-square)
+![Android](https://img.shields.io/badge/Android-24%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
+![License](https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square)
 
 ---
 
 ## Screenshots
 
-| Routines | Workout session | Progress | Report |
-|---|---|---|---|
-| ![](docs/routines.png) | ![](docs/workout.png) | ![](docs/progress.png) | ![](docs/report.png) |
+| Home · Login · Feed | Routines · Feed · Workout |
+|---|---|
+| <img src=".dock/1784625201453.jpg" width="360"> | <img src=".dock/1784625203852.jpg" width="360"> |
 
 ---
 
@@ -27,28 +26,29 @@ Users log workouts without connectivity; changes are stored locally and synchron
 |---|---|
 | Routines | Create, edit and share routines with friends |
 | Workout tracking | Sessions, sets, reps, weight, RPE and rest timer |
-| Exercise library | Searchable catalog with GIF demos and an interactive body map (SVG) to filter by muscle |
+| Exercise library | Searchable catalog with GIF demos and an interactive SVG body map to filter by muscle |
 | Progress | Custom Canvas charts: estimated 1RM, volume and max weight per session |
-| Report | Weekly / monthly / yearly stats and sets per muscle group vs. recommended range |
+| Report | Weekly, monthly, 3-month and yearly stats, plus sets per muscle group vs. recommended range |
 | 1RM calculator | Brzycki formula |
 | Body composition | Weight, muscle, fat, water; derived fat % and BMR |
-| Social | Friend requests, email invitations, routine requests, activity feed |
+| Social | Friend requests, email invitations, routine requests and activity feed |
 
 ---
 
 ## Architecture
 
 ```text
-:app            UI (Compose), navigation, ViewModels, feature domain
-:core:data      Sync repository and mappers
-:core:database  Room entities, DAOs, migrations
-:core:network   Retrofit, Moshi, OkHttp, session / JWT management
+:app            Compose UI, navigation, ViewModels and per-feature data/domain layers
+:core:data      Shared models, mappers and the synchronization repository
+:core:database  Room entities, DAOs, converters and AppDatabase
+:core:network   Retrofit, Moshi, OkHttp, DTOs, interceptors and JWT/session management
 ```
 
-- Clean architecture per feature: `data` / `domain` / `presentation`
+- Feature-oriented clean architecture: each feature keeps its `data` / `domain` / `presentation` layers
 - MVVM with `StateFlow` and Compose state
-- Dependency injection with Hilt
-- Room as single source of truth, UI observes `Flow`
+- Dependency injection with Hilt (KSP)
+- Room as single source of truth; the UI observes `Flow`
+- Multi-module Gradle project: `:app`, `:core:data`, `:core:database`, `:core:network`
 
 ---
 
@@ -59,7 +59,7 @@ UI → Room (SyncStatus = PENDING) → Push → API
 UI ← Room (SyncStatus = SYNCED)  ← Pull ← API (delta since LAST_SYNC)
 ```
 
-- Every entity carries `CREATED_AT`, `UPDATED_AT`, `DELETED_AT` and `SYNC_STATUS`
+- Every synchronized entity carries `CREATED_AT`, `UPDATED_AT`, `DELETED_AT` and `SYNC_STATUS`
 - Soft delete so deletions propagate across devices
 - Push sends only `PENDING` rows and marks as `SYNCED` the ones the server confirms
 - Pull requests only entities changed since the last sync anchor
@@ -69,15 +69,94 @@ UI ← Room (SyncStatus = SYNCED)  ← Pull ← API (delta since LAST_SYNC)
 
 ## Tech Stack
 
-Kotlin 2.0 • Jetpack Compose • Material 3 • Navigation Compose • Room • Hilt (KSP) • Retrofit • Moshi • OkHttp • Coil (GIF) • Coroutines / Flow
+Kotlin 2.0.20 • Jetpack Compose • Material 3 • Navigation Compose • Room 2.6.1 • Hilt 2.51.1 (KSP) • Retrofit 2.11.0 • Moshi 1.15.0 • OkHttp 4.12.0 • Coil 2.7.0 (GIF) • Coroutines / Flow
+
+---
+
+## Requirements
+
+- JDK 17
+- Android SDK Platform 35 (`compileSdk = 35`, `targetSdk = 35`, `minSdk = 24`)
+- Android Studio
+- Gradle 8.13 (provided by the Gradle wrapper)
 
 ---
 
 ## Build
 
-Requires `local.properties` (not versioned):
+`local.properties` is not versioned. Android Studio usually creates it with `sdk.dir`; add the remaining keys at the repository root:
 
 ```properties
-BASE_URL=<api-base-url>
-TOKEN_APP=<app-token>
+# Android SDK location (usually generated by Android Studio)
+sdk.dir=/path/to/Android/Sdk
+
+# :core:network
+BASE_URL=https://your-api-host/
+
+# :app
+TOKEN_APP=
+LINK_APK=
+EMAIL_APP=
+```
+
+| Key | Module | Used for |
+|---|---|---|
+| `BASE_URL` | `:core:network` | Retrofit base URL |
+| `TOKEN_APP` | `:app` | App token exposed through `BuildConfig` |
+| `LINK_APK` | `:app` | Download/update link shown by the update-required screen |
+| `EMAIL_APP` | `:app` | Contact address used by the feed header |
+
+The Gradle build reads these properties with empty defaults, so the project can compile without them. Network calls and the screens above need valid values at runtime.
+
+Build the debug APK:
+
+```bash
+./gradlew assembleDebug
+```
+
+Install it on a connected device or emulator:
+
+```bash
+./gradlew installDebug
+```
+
+Release builds enable R8 minification and resource shrinking. Add your own signing configuration before distributing a release build.
+
+---
+
+## Tests
+
+```bash
+./gradlew testDebugUnitTest
+./gradlew connectedDebugAndroidTest
+```
+
+The repository currently contains no unit or instrumentation test sources. The standard Gradle tasks are available for tests added later.
+
+---
+
+## Contributing
+
+Contributions are welcome. For substantial changes, please open an issue first to discuss the approach. Fork the repository, create a focused branch, and open a pull request describing the change and how you tested it.
+
+---
+
+## License
+
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the full text.
+
+```
+Copyright 2026 Piotrek Budzowski
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 ```
