@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permissions": [
+    {
+      "read": {
+        "*": "allow",
+        "**/.env*": "deny",
+        "**/id_rsa*": "deny",
+        "**/local.properties": "deny"
+      },
+      "edit": {
+        "*": "allow",
+        "**/opencode.json": "deny",
+        "**/.opencode/opencode.json": "deny"
+      }
+    },
+    { "action": "shell", "resource": "git checkout *", "effect": "deny" },
+    { "action": "shell", "resource": "git switch *", "effect": "deny" },
+    { "action": "shell", "resource": "git branch *", "effect": "deny" },
+    { "action": "shell", "resource": "git worktree *", "effect": "deny" },
+
+    { "action": "shell", "resource": "git clone *", "effect": "deny" },
+    { "action": "shell", "resource": "git submodule *", "effect": "deny" },
+    { "action": "shell", "resource": "git remote add *", "effect": "deny" },
+
+    { "action": "shell", "resource": "git push *", "effect": "ask" }
+  ]
+}

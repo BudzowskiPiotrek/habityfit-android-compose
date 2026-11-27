@@ -108,9 +108,9 @@ data class FriendsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendInvitation(email: String, senderId: String): Result<Unit> {
+    override suspend fun sendInvitation(email: String): Result<Unit> {
         return try {
-            userInvitationDao.insert(createInvitationEntity(email, senderId))
+            userInvitationDao.insert(createInvitationEntity(email))
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
